@@ -53,10 +53,11 @@ class GrpcServerFactoryConfigurations {
 
 		@Bean
 		ShadedNettyGrpcServerFactory shadedNettyGrpcServerFactory(GrpcServerProperties properties,
-				ObjectProvider<BindableService> grpcServicesProvider) {
+				ObjectProvider<BindableService> grpcServicesProvider,
+				ServerBuilderCustomizers severBuilderCustomizers) {
 			ShadedNettyServerFactoryPropertyMapper mapper = new ShadedNettyServerFactoryPropertyMapper(properties);
 			List<ServerBuilderCustomizer<io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder>> builderCustomizers = List
-				.of(mapper::customizeNettyServerBuilder);
+				.of(mapper::customizeNettyServerBuilder, severBuilderCustomizers::customize);
 			ShadedNettyGrpcServerFactory factory = new ShadedNettyGrpcServerFactory(properties.getAddress(),
 					properties.getPort(), builderCustomizers);
 			grpcServicesProvider.orderedStream().map(BindableService::bindService).forEach(factory::addService);
@@ -73,10 +74,11 @@ class GrpcServerFactoryConfigurations {
 
 		@Bean
 		NettyGrpcServerFactory nettyGrpcServerFactory(GrpcServerProperties properties,
-				ObjectProvider<BindableService> grpcServicesProvider) {
+				ObjectProvider<BindableService> grpcServicesProvider,
+				ServerBuilderCustomizers severBuilderCustomizers) {
 			NettyServerFactoryPropertyMapper mapper = new NettyServerFactoryPropertyMapper(properties);
 			List<ServerBuilderCustomizer<NettyServerBuilder>> builderCustomizers = List
-					.of(mapper::customizeNettyServerBuilder);
+					.of(mapper::customizeNettyServerBuilder, severBuilderCustomizers::customize);
 			NettyGrpcServerFactory factory = new NettyGrpcServerFactory(properties.getAddress(),
 					properties.getPort(), builderCustomizers);
 			grpcServicesProvider.orderedStream().map(BindableService::bindService).forEach(factory::addService);
@@ -93,9 +95,11 @@ class GrpcServerFactoryConfigurations {
 
 		@Bean
 		<T extends ServerBuilder<T>> BaseGrpcServerFactory<T> serviceProviderGrpcServerFactory(GrpcServerProperties properties,
-				ObjectProvider<BindableService> grpcServicesProvider) {
+				ObjectProvider<BindableService> grpcServicesProvider,
+				ServerBuilderCustomizers serverBuilderCustomizers) {
 			BaseServerFactoryPropertyMapper mapper = new BaseServerFactoryPropertyMapper(properties);
-			List<ServerBuilderCustomizer<T>> builderCustomizers = List.of(mapper::customizeServerBuilder);
+			List<ServerBuilderCustomizer<T>> builderCustomizers = List.of(mapper::customizeServerBuilder,
+					serverBuilderCustomizers::customize);
 			BaseGrpcServerFactory factory = new BaseGrpcServerFactory(properties.getAddress(),
 					properties.getPort(), builderCustomizers);
 			grpcServicesProvider.orderedStream().map(BindableService::bindService).forEach(factory::addService);
@@ -113,10 +117,11 @@ class GrpcServerFactoryConfigurations {
 
 		@Bean
 		InProcessGrpcServerFactory inProcessGrpcServerFactory(GrpcServerProperties properties,
-				ObjectProvider<BindableService> grpcServicesProvider) {
+				ObjectProvider<BindableService> grpcServicesProvider,
+				ServerBuilderCustomizers serverBuilderCustomizers) {
 			InProcessServerFactoryPropertyMapper mapper = new InProcessServerFactoryPropertyMapper(properties);
 			InProcessGrpcServerFactory factory = new InProcessGrpcServerFactory(properties.getAddress(),
-					properties.getPort(), List.of(mapper::customizeBuilder));
+					properties.getPort(), List.of(mapper::customizeBuilder, serverBuilderCustomizers::customize));
 			grpcServicesProvider.orderedStream().map(BindableService::bindService).forEach(factory::addService);
 			return factory;
 		}

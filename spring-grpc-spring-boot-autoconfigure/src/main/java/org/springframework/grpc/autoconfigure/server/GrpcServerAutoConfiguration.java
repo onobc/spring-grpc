@@ -17,6 +17,7 @@ package org.springframework.grpc.autoconfigure.server;
 
 import io.grpc.BindableService;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -29,6 +30,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.grpc.server.GrpcServerFactory;
+import org.springframework.grpc.server.ServerBuilderCustomizer;
 import org.springframework.grpc.server.lifecycle.GrpcServerLifecycle;
 
 /**
@@ -63,4 +65,9 @@ public class GrpcServerAutoConfiguration {
 		return new GrpcServerLifecycle(factory, this.properties.getShutdownGracePeriod(), eventPublisher);
 	}
 
+	@ConditionalOnMissingBean
+	@Bean
+	ServerBuilderCustomizers serverBuilderCustomizers(ObjectProvider<ServerBuilderCustomizer<?>> customizers) {
+		return new ServerBuilderCustomizers(customizers.orderedStream().toList());
+	}
 }
