@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.grpc.server;
 
-import io.grpc.ServerBuilder;
+import java.util.List;
 
-/**
- * Callback interface that can be used to customize a {@link ServerBuilder}.
- *
- * @author Chris Bono
- */
-@FunctionalInterface
-public interface ServerBuilderCustomizer<T extends ServerBuilder<T>> {
+import io.grpc.inprocess.InProcessServerBuilder;
 
-	/**
-	 * Callback to customize a {@link ServerBuilder} instance.
-	 * @param serverBuilder the builder to customize
-	 */
-	void customize(T serverBuilder);
+public class InProcessGrpcServerFactory extends BaseGrpcServerFactory<InProcessServerBuilder> {
 
+	public InProcessGrpcServerFactory(String address, int port, List<ServerBuilderCustomizer<InProcessServerBuilder>> serverBuilderCustomizers) {
+		super(address, port, serverBuilderCustomizers);
+	}
+
+	@Override
+	protected InProcessServerBuilder newServerBuilder() {
+		return InProcessServerBuilder.forPort(getPort()); // TODO fix this
+	}
 }

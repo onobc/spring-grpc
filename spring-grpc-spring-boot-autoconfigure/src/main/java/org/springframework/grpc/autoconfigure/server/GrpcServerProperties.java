@@ -17,27 +17,44 @@ package org.springframework.grpc.autoconfigure.server;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
+
+import io.grpc.internal.GrpcUtil;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DataSizeUnit;
 import org.springframework.boot.convert.DurationUnit;
+import org.springframework.util.unit.DataSize;
+import org.springframework.util.unit.DataUnit;
 
 @ConfigurationProperties(prefix = "spring.grpc.server")
 public class GrpcServerProperties {
 
 	private String address = "*";
 
+	/**
+	 * Server port to listen on. When the value is 0, a random available port is selected.
+	 * When the value is -1, the inter-process server is disabled (for example if you only
+	 * want to use the in-process server).
+	 */
 	private int port = 9090;
 
 	/**
-	 * The time to wait for the server to gracefully shutdown (completing all requests
-	 * after the server started to shutdown). If set to a negative value, the server waits
-	 * forever. If set to {@code 0} the server will force shutdown immediately. Defaults
-	 * to {@code 30s}.
-	 * @param shutdownGracePeriod The time to wait for a graceful shutdown.
-	 * @return The time to wait for a graceful shutdown.
+	 * Name of the in-process server or null to not start the in process server.
+	 */
+	private String inProcessName;
+
+	/**
+	 * Maximum time to wait for the server to gracefully shutdown.
+	 * When the value is negative, the server waits forever.
+	 * When the value is 0, the server will force shutdown immediately.
+	 * The default is 30 seconds.
 	 */
 	@DurationUnit(ChronoUnit.SECONDS)
 	private Duration shutdownGracePeriod = Duration.of(30, ChronoUnit.SECONDS);
+
+	private final KeepAlive keepAlive = new KeepAlive();
 
 	public String getAddress() {
 		return address;
@@ -55,12 +72,57 @@ public class GrpcServerProperties {
 		this.port = port;
 	}
 
+	public String getInProcessName() {
+		return inProcessName;
+	}
+
+	public void setInProcessName(String inProcessName) {
+		this.inProcessName = inProcessName;
+	}
+
 	public Duration getShutdownGracePeriod() {
 		return shutdownGracePeriod;
 	}
 
 	public void setShutdownGracePeriod(Duration shutdownGracePeriod) {
 		this.shutdownGracePeriod = shutdownGracePeriod;
+	}
+
+	public KeepAlive getKeepAlive() {
+		return this.keepAlive;
+	}
+
+	public static class KeepAlive {
+
+		/**
+		 * Duration without read activity before sending a keep alive ping (default 2h).
+		 */
+		@DurationUnit(ChronoUnit.SECONDS)
+		private Duration time = Duration.of(2, ChronoUnit.HOURS);
+
+		/**
+		 * Maximum time to wait for read activity after sending a keep alive ping.
+		 * If sender does not receive an acknowledgment within this time, it will
+		 * close the connection (default 20s).
+		 */
+		@DurationUnit(ChronoUnit.SECONDS)
+		private Duration timeout = Duration.of(20, ChronoUnit.SECONDS);
+
+		public Duration getTime() {
+			return time;
+		}
+
+		public void setTime(Duration time) {
+			this.time = time;
+		}
+
+		public Duration getTimeout() {
+			return timeout;
+		}
+
+		public void setTimeout(Duration timeout) {
+			this.timeout = timeout;
+		}
 	}
 
 }
