@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.grpc.autoconfigure.client.ClientInterceptorsConfiguration;
+import org.springframework.boot.grpc.server.autoconfigure.client.ClientInterceptorsConfiguration;
 import org.springframework.grpc.autoconfigure.client.GrpcClientAutoConfiguration;
 import org.springframework.grpc.autoconfigure.server.GrpcServerFactoryAutoConfiguration;
 import org.springframework.grpc.client.ClientInterceptorsConfigurer;

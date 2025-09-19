@@ -211,7 +211,7 @@ If you’re a Maven user, you can use the dependencies by adding the following t
         <dependency>
             <groupId>org.springframework.grpc</groupId>
             <artifactId>spring-grpc-dependencies</artifactId>
-            <version>0.11.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
