@@ -128,7 +128,7 @@ class OAuth2ResourceServerAutoConfigurationTests {
 			.run((context) -> assertThat(context).doesNotHaveBean(AuthenticationProcessInterceptor.class));
 	}
 
-	// @Disabled("TODO fix GrpcSecurity mismatch w/ Spring Security 6/7")
+	@Disabled("TODO fix GrpcSecurity mismatch w/ Spring Security 6/7")
 	@Test
 	void configuredInWebApplicationWithGrpcNative() {
 		new WebApplicationContextRunner(WebApplicationContextRunner.withMockServletContext(MyContext::new))
