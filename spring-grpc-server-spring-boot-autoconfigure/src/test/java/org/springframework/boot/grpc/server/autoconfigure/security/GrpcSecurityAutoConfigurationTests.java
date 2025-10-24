@@ -16,7 +16,8 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.security;
 
-import io.grpc.BindableService;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -36,7 +37,7 @@ import org.springframework.grpc.server.security.SecurityGrpcExceptionHandler;
 import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.grpc.BindableService;
 
 /**
  * Tests for {@link GrpcServerAutoConfiguration}.

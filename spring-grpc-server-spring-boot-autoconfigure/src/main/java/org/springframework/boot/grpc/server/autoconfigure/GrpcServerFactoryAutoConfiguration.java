@@ -18,9 +18,6 @@ package org.springframework.boot.grpc.server.autoconfigure;
 
 import java.util.List;
 
-import io.grpc.BindableService;
-import io.grpc.servlet.jakarta.GrpcServlet;
-import io.grpc.servlet.jakarta.ServletServerBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,6 +34,10 @@ import org.springframework.core.Ordered;
 import org.springframework.grpc.server.service.GrpcServiceConfigurer;
 import org.springframework.grpc.server.service.GrpcServiceDiscoverer;
 import org.springframework.util.unit.DataSize;
+
+import io.grpc.BindableService;
+import io.grpc.servlet.jakarta.GrpcServlet;
+import io.grpc.servlet.jakarta.ServletServerBuilder;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for gRPC server factories.

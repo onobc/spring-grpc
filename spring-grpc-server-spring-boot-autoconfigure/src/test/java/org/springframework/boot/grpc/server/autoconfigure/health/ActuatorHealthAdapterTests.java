@@ -16,23 +16,6 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.health;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
-import io.grpc.protobuf.services.HealthStatusManager;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import org.springframework.boot.actuate.health.HealthDescriptor;
-import org.springframework.boot.actuate.health.HealthEndpoint;
-import org.springframework.boot.actuate.health.StatusAggregator;
-import org.springframework.boot.health.contributor.Status;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,6 +25,24 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import org.springframework.boot.health.actuate.endpoint.HealthDescriptor;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.health.actuate.endpoint.StatusAggregator;
+import org.springframework.boot.health.contributor.Status;
+
+import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
+import io.grpc.protobuf.services.HealthStatusManager;
 
 /**
  * Tests for {@link ActuatorHealthAdapter}.

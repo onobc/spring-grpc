@@ -16,20 +16,21 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.health;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
 import java.util.Arrays;
 
-import io.grpc.BindableService;
-import io.grpc.protobuf.services.HealthStatusManager;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration;
-import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration;
 import org.springframework.boot.grpc.server.autoconfigure.health.GrpcServerHealthAutoConfiguration.ActuatorHealthAdapterConfiguration;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.health.autoconfigure.actuate.endpoint.HealthEndpointAutoConfiguration;
 import org.springframework.boot.health.autoconfigure.contributor.HealthContributorAutoConfiguration;
 import org.springframework.boot.health.autoconfigure.registry.HealthContributorRegistryAutoConfiguration;
 import org.springframework.boot.test.context.FilteredClassLoader;
@@ -38,8 +39,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.grpc.server.GrpcServerFactory;
 import org.springframework.util.StringUtils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import io.grpc.BindableService;
+import io.grpc.protobuf.services.HealthStatusManager;
 
 /**
  * Tests for {@link GrpcServerHealthAutoConfiguration}.

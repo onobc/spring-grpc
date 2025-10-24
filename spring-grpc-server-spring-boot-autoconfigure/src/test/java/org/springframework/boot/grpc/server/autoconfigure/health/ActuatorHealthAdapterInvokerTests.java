@@ -16,16 +16,16 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.health;
 
+import static org.mockito.BDDMockito.atLeast;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+
 import java.time.Duration;
 
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.task.SimpleAsyncTaskSchedulerBuilder;
-
-import static org.mockito.BDDMockito.atLeast;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link ActuatorHealthAdapterInvoker}.

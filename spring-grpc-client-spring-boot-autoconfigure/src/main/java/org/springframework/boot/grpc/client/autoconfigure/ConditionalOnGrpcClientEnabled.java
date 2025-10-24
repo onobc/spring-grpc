@@ -21,11 +21,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import io.grpc.stub.AbstractStub;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Conditional;
+
+import io.grpc.stub.AbstractStub;
 
 /**
  * {@link Conditional @Conditional} that only matches when the {@code io.grpc:grpc-stub}

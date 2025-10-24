@@ -14,11 +14,21 @@
 	<description>Building gRPC applications with Spring Boot</description>
 
 	<modules>
+		<!-- Spring gRPC modules -->
 		<module>spring-grpc-build-dependencies</module>
-		<module>spring-grpc-docs</module>
-		<module>spring-grpc-dependencies</module>
 		<module>spring-grpc-core</module>
-<!--		<module>samples</module>-->
+		<module>spring-grpc-dependencies</module>
+		<module>spring-grpc-docs</module>
+		<!--		<module>samples</module>-->
+
+		<!-- Spring Boot modules -->
+		<module>spring-grpc-client-spring-boot-autoconfigure</module>
+		<module>spring-grpc-client-spring-boot-starter</module>
+		<module>spring-grpc-server-spring-boot-autoconfigure</module>
+		<module>spring-grpc-server-spring-boot-starter</module>
+		<module>spring-grpc-server-web-spring-boot-starter</module>
+		<module>spring-grpc-spring-boot-starter</module>
+		<module>spring-grpc-test-spring-boot-autoconfigure</module>
 	</modules>
 
 	<organization>
@@ -70,7 +80,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>17</java.version>
 		<!-- internal dependencies -->
-		<spring-boot.version>4.0.0-SNAPSHOT</spring-boot.version>
+		<spring-boot.version>4.0.0-RC1</spring-boot.version>
 		<jackson.version>2.20.0</jackson.version>
 		<junit.version>5.13.4</junit.version>
 		<assertj.version>3.27.4</assertj.version>

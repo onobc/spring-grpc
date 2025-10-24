@@ -16,14 +16,14 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.grpc.BindableService;
-import io.grpc.protobuf.services.ProtoReflectionServiceV1;
-
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
+
+import io.grpc.BindableService;
+import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for gRPC Reflection service

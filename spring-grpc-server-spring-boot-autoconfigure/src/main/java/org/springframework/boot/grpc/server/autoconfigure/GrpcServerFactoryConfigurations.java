@@ -21,10 +21,6 @@ import java.util.List;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.netty.NettyServerBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -47,6 +43,10 @@ import org.springframework.grpc.server.service.GrpcServiceConfigurer;
 import org.springframework.grpc.server.service.GrpcServiceDiscoverer;
 import org.springframework.grpc.server.service.ServerInterceptorFilter;
 import org.springframework.util.Assert;
+
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.netty.NettyServerBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
 /**
  * Configurations for {@link GrpcServerFactory gRPC server factories}.

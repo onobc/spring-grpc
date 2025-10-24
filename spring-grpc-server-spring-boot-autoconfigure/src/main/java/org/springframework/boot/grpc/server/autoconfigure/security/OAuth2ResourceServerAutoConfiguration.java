@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import io.grpc.BindableService;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -52,6 +50,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.grpc.server.GlobalServerInterceptor;
 import org.springframework.grpc.server.security.AuthenticationProcessInterceptor;
 import org.springframework.grpc.server.security.GrpcSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -72,7 +71,7 @@ import org.springframework.security.oauth2.server.resource.introspection.OpaqueT
 import org.springframework.security.oauth2.server.resource.introspection.SpringOpaqueTokenIntrospector;
 import org.springframework.util.CollectionUtils;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import io.grpc.BindableService;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for gRPC OAuth2 resource server.
@@ -148,7 +147,7 @@ public final class OAuth2ResourceServerAutoConfiguration {
 			AuthenticationProcessInterceptor opaqueTokenAuthenticationProcessInterceptor(GrpcSecurity http)
 					throws Exception {
 				http.authorizeRequests((requests) -> requests.allRequests().authenticated());
-				http.oauth2ResourceServer((resourceServer) -> resourceServer.opaqueToken(withDefaults()));
+				http.oauth2ResourceServer((resourceServer) -> resourceServer.opaqueToken(Customizer.withDefaults()));
 				return http.build();
 			}
 
@@ -269,7 +268,7 @@ public final class OAuth2ResourceServerAutoConfiguration {
 			@GlobalServerInterceptor
 			AuthenticationProcessInterceptor jwtAuthenticationProcessInterceptor(GrpcSecurity http) throws Exception {
 				http.authorizeRequests((requests) -> requests.allRequests().authenticated());
-				http.oauth2ResourceServer((resourceServer) -> resourceServer.jwt(withDefaults()));
+				http.oauth2ResourceServer((resourceServer) -> resourceServer.jwt(Customizer.withDefaults()));
 				return http.build();
 			}
 

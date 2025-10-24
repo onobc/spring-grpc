@@ -16,8 +16,6 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.grpc.servlet.jakarta.GrpcServlet;
-
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -25,6 +23,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebAppli
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Conditional;
+
+import io.grpc.servlet.jakarta.GrpcServlet;
 
 /**
  * {@link Conditional @Conditional} that determines if the gRPC server implementation

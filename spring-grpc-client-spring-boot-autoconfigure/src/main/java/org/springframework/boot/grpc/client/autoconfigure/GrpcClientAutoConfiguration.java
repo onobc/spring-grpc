@@ -16,10 +16,6 @@
 
 package org.springframework.boot.grpc.client.autoconfigure;
 
-import io.grpc.CompressorRegistry;
-import io.grpc.DecompressorRegistry;
-import io.grpc.ManagedChannelBuilder;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -37,6 +33,10 @@ import org.springframework.grpc.client.ClientInterceptorsConfigurer;
 import org.springframework.grpc.client.CoroutineStubFactory;
 import org.springframework.grpc.client.GrpcChannelBuilderCustomizer;
 import org.springframework.grpc.client.GrpcClientFactory;
+
+import io.grpc.CompressorRegistry;
+import io.grpc.DecompressorRegistry;
+import io.grpc.ManagedChannelBuilder;
 
 @AutoConfiguration(before = CompositeChannelFactoryAutoConfiguration.class)
 @ConditionalOnGrpcClientEnabled

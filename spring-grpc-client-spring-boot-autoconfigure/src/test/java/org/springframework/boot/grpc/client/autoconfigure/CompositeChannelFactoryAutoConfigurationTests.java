@@ -16,8 +16,9 @@
 
 package org.springframework.boot.grpc.client.autoconfigure;
 
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.netty.NettyChannelBuilder;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +32,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.grpc.client.CompositeGrpcChannelFactory;
 import org.springframework.grpc.client.GrpcChannelFactory;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.netty.NettyChannelBuilder;
 
 /**
  * Tests for {@link CompositeChannelFactoryAutoConfiguration}.

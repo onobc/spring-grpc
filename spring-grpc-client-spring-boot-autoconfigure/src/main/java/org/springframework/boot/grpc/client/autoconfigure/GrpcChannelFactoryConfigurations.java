@@ -18,10 +18,6 @@ package org.springframework.boot.grpc.client.autoconfigure;
 
 import java.util.List;
 
-import io.grpc.Channel;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.netty.NettyChannelBuilder;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,6 +33,10 @@ import org.springframework.grpc.client.GrpcChannelFactory;
 import org.springframework.grpc.client.InProcessGrpcChannelFactory;
 import org.springframework.grpc.client.NettyGrpcChannelFactory;
 import org.springframework.grpc.client.ShadedNettyGrpcChannelFactory;
+
+import io.grpc.Channel;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.netty.NettyChannelBuilder;
 
 /**
  * Configurations for {@link GrpcChannelFactory gRPC channel factories}.

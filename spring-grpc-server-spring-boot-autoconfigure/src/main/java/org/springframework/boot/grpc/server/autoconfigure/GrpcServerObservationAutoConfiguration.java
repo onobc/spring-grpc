@@ -16,10 +16,6 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.micrometer.core.instrument.binder.grpc.ObservationGrpcServerInterceptor;
-import io.micrometer.core.instrument.kotlin.ObservationCoroutineContextServerInterceptor;
-import io.micrometer.observation.ObservationRegistry;
-
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -28,6 +24,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.grpc.server.GlobalServerInterceptor;
+
+import io.micrometer.core.instrument.binder.grpc.ObservationGrpcServerInterceptor;
+import io.micrometer.core.instrument.kotlin.ObservationCoroutineContextServerInterceptor;
+import io.micrometer.observation.ObservationRegistry;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for gRPC server-side observations.

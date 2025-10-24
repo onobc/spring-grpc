@@ -18,10 +18,6 @@ package org.springframework.boot.grpc.client.autoconfigure;
 
 import javax.net.ssl.TrustManagerFactory;
 
-import io.grpc.ChannelCredentials;
-import io.grpc.InsecureChannelCredentials;
-import io.grpc.TlsChannelCredentials;
-
 import org.springframework.boot.grpc.client.autoconfigure.GrpcClientProperties.ChannelConfig;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
@@ -29,6 +25,10 @@ import org.springframework.grpc.client.ChannelCredentialsProvider;
 import org.springframework.grpc.client.NegotiationType;
 import org.springframework.grpc.internal.InsecureTrustManagerFactory;
 import org.springframework.util.Assert;
+
+import io.grpc.ChannelCredentials;
+import io.grpc.InsecureChannelCredentials;
+import io.grpc.TlsChannelCredentials;
 
 /**
  * Provides channel credentials using channel configuration and {@link SslBundles}.

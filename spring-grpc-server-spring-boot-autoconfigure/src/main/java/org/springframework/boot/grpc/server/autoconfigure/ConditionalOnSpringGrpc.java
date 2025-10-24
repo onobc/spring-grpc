@@ -21,11 +21,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import io.grpc.BindableService;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.grpc.server.GrpcServerFactory;
+
+import io.grpc.BindableService;
 
 /**
  * {@link Conditional @Conditional} that only matches when Spring gRPC is on the classpath

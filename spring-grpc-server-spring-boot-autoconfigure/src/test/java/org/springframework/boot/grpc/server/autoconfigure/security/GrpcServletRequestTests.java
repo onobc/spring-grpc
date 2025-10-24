@@ -16,8 +16,10 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.security;
 
-import io.grpc.BindableService;
-import io.grpc.ServerServiceDefinition;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,9 +31,8 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.StaticWebApplicationContext;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
+import io.grpc.BindableService;
+import io.grpc.ServerServiceDefinition;
 
 class GrpcServletRequestTests {
 

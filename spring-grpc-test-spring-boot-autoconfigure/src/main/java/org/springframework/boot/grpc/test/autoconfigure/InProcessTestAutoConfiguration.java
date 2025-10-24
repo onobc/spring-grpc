@@ -20,11 +20,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-import io.grpc.BindableService;
-import io.grpc.ChannelCredentials;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.stub.AbstractStub;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -49,6 +44,12 @@ import org.springframework.grpc.server.ServerServiceDefinitionFilter;
 import org.springframework.grpc.server.lifecycle.GrpcServerLifecycle;
 import org.springframework.grpc.server.service.GrpcServiceConfigurer;
 import org.springframework.grpc.server.service.GrpcServiceDiscoverer;
+
+import io.grpc.BindableService;
+import io.grpc.ChannelCredentials;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.stub.AbstractStub;
 
 /**
  * Auto-configuration for an in-process test gRPC server.

@@ -16,7 +16,8 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.grpc.BindableService;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -26,7 +27,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.grpc.server.GrpcServerFactory;
 import org.springframework.grpc.server.lifecycle.GrpcServerLifecycle;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.grpc.BindableService;
 
 /**
  * Tests for {@link GrpcServerReflectionAutoConfiguration}.

@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import io.grpc.ManagedChannel;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -35,6 +34,8 @@ import org.springframework.grpc.client.NegotiationType;
 import org.springframework.grpc.client.StubFactory;
 import org.springframework.grpc.client.VirtualTargets;
 import org.springframework.util.unit.DataSize;
+
+import io.grpc.ManagedChannel;
 
 @ConfigurationProperties(prefix = "spring.grpc.client")
 public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {

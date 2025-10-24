@@ -21,7 +21,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.grpc.TlsServerCredentials.ClientAuth;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -30,6 +29,8 @@ import org.springframework.boot.convert.DurationUnit;
 import org.springframework.grpc.internal.GrpcUtils;
 import org.springframework.util.unit.DataSize;
 import org.springframework.util.unit.DataUnit;
+
+import io.grpc.TlsServerCredentials.ClientAuth;
 
 @ConfigurationProperties(prefix = "spring.grpc.server")
 public class GrpcServerProperties {

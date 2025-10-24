@@ -16,6 +16,8 @@
 
 package org.springframework.boot.grpc.client.autoconfigure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,8 +32,6 @@ import org.springframework.grpc.client.GrpcClientFactory.GrpcClientRegistrationS
 import org.springframework.grpc.client.ReactorStubFactory;
 import org.springframework.grpc.client.StubFactory;
 import org.springframework.mock.env.MockEnvironment;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for the {@link DefaultGrpcClientRegistrations}.

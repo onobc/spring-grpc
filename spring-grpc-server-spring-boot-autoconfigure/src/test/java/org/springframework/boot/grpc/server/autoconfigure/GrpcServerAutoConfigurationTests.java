@@ -16,19 +16,18 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.grpc.BindableService;
-import io.grpc.Codec;
-import io.grpc.CompressorRegistry;
-import io.grpc.DecompressorRegistry;
-import io.grpc.Grpc;
-import io.grpc.ServerBuilder;
-import io.grpc.ServerServiceDefinition;
-import io.grpc.ServiceDescriptor;
-import io.grpc.netty.NettyServerBuilder;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -60,13 +59,15 @@ import org.springframework.grpc.server.service.GrpcServiceConfigurer;
 import org.springframework.grpc.server.service.GrpcServiceDiscoverer;
 import org.springframework.grpc.server.service.ServerInterceptorFilter;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.mock;
+import io.grpc.BindableService;
+import io.grpc.Codec;
+import io.grpc.CompressorRegistry;
+import io.grpc.DecompressorRegistry;
+import io.grpc.Grpc;
+import io.grpc.ServerBuilder;
+import io.grpc.ServerServiceDefinition;
+import io.grpc.ServiceDescriptor;
+import io.grpc.netty.NettyServerBuilder;
 
 /**
  * Tests for {@link GrpcServerAutoConfiguration}.

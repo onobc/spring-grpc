@@ -16,9 +16,9 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.grpc.netty.NettyServerBuilder;
-
 import org.springframework.grpc.server.NettyGrpcServerFactory;
+
+import io.grpc.netty.NettyServerBuilder;
 
 /**
  * Helper class used to map {@link GrpcServerProperties} to

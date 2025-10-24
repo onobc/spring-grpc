@@ -18,12 +18,7 @@ package org.springframework.boot.grpc.server.autoconfigure.health;
 
 import java.util.List;
 
-import io.grpc.BindableService;
-import io.grpc.protobuf.services.HealthStatusManager;
-
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
-import org.springframework.boot.actuate.health.HealthEndpoint;
-import org.springframework.boot.actuate.health.StatusAggregator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,6 +37,8 @@ import org.springframework.boot.grpc.server.autoconfigure.ConditionalOnGrpcServe
 import org.springframework.boot.grpc.server.autoconfigure.ConditionalOnSpringGrpc;
 import org.springframework.boot.grpc.server.autoconfigure.GrpcServerFactoryAutoConfiguration;
 import org.springframework.boot.grpc.server.autoconfigure.GrpcServerProperties;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.health.actuate.endpoint.StatusAggregator;
 import org.springframework.boot.task.SimpleAsyncTaskSchedulerBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
@@ -49,6 +46,9 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import io.grpc.BindableService;
+import io.grpc.protobuf.services.HealthStatusManager;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for gRPC server-side health service.

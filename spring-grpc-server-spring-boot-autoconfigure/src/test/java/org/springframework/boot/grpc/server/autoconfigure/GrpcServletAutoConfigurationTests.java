@@ -16,11 +16,12 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.grpc.BindableService;
-import io.grpc.ServerServiceDefinition;
-import io.grpc.internal.GrpcUtil;
-import io.grpc.servlet.jakarta.GrpcServlet;
-import io.grpc.servlet.jakarta.ServletServerBuilder;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -34,11 +35,11 @@ import org.springframework.grpc.server.GrpcServerFactory;
 import org.springframework.grpc.server.ServerBuilderCustomizer;
 import org.springframework.util.unit.DataSize;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
+import io.grpc.BindableService;
+import io.grpc.ServerServiceDefinition;
+import io.grpc.internal.GrpcUtil;
+import io.grpc.servlet.jakarta.GrpcServlet;
+import io.grpc.servlet.jakarta.ServletServerBuilder;
 
 /**
  * Tests for {@link GrpcServerAutoConfiguration}.

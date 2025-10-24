@@ -16,8 +16,6 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.security;
 
-import io.grpc.internal.GrpcUtil;
-
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -46,6 +44,8 @@ import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.web.SecurityFilterChain;
+
+import io.grpc.internal.GrpcUtil;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for gRPC server-side security.

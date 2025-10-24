@@ -16,13 +16,13 @@
 
 package org.springframework.boot.grpc.client.autoconfigure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 import java.util.Map;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit tests for {@link ConfigurationPropertiesMapUtils}.

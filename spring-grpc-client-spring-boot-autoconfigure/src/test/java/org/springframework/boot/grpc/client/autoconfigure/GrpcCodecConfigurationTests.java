@@ -16,20 +16,21 @@
 
 package org.springframework.boot.grpc.client.autoconfigure;
 
-import io.grpc.Codec;
-import io.grpc.Compressor;
-import io.grpc.CompressorRegistry;
-import io.grpc.Decompressor;
-import io.grpc.DecompressorRegistry;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
+import io.grpc.Codec;
+import io.grpc.Compressor;
+import io.grpc.CompressorRegistry;
+import io.grpc.Decompressor;
+import io.grpc.DecompressorRegistry;
 
 /**
  * Tests for {@link GrpcCodecConfiguration}.

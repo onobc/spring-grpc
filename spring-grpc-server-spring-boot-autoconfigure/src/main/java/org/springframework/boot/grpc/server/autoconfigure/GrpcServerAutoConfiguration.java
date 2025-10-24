@@ -16,11 +16,6 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.grpc.BindableService;
-import io.grpc.CompressorRegistry;
-import io.grpc.DecompressorRegistry;
-import io.grpc.ServerBuilder;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -39,6 +34,11 @@ import org.springframework.grpc.server.service.DefaultGrpcServiceConfigurer;
 import org.springframework.grpc.server.service.DefaultGrpcServiceDiscoverer;
 import org.springframework.grpc.server.service.GrpcServiceConfigurer;
 import org.springframework.grpc.server.service.GrpcServiceDiscoverer;
+
+import io.grpc.BindableService;
+import io.grpc.CompressorRegistry;
+import io.grpc.DecompressorRegistry;
+import io.grpc.ServerBuilder;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for Spring gRPC server-side

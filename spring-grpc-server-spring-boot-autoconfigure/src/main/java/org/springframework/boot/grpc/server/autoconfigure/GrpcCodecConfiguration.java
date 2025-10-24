@@ -16,18 +16,18 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import io.grpc.Codec;
 import io.grpc.Compressor;
 import io.grpc.CompressorRegistry;
 import io.grpc.Decompressor;
 import io.grpc.DecompressorRegistry;
 import io.grpc.ServerBuilder;
-
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * The configuration that contains all codec related beans for gRPC servers.

@@ -16,6 +16,9 @@
 
 package org.springframework.boot.grpc.client.autoconfigure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,9 +36,6 @@ import org.springframework.grpc.client.NegotiationType;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.unit.DataSize;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 /**
  * Tests for {@link GrpcClientProperties}.

@@ -16,6 +16,10 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -25,10 +29,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.mock.env.MockEnvironment;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link OnEnabledGrpcServerCondition}.

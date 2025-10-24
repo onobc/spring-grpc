@@ -16,7 +16,8 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.exception;
 
-import io.grpc.BindableService;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -29,7 +30,7 @@ import org.springframework.grpc.server.exception.GrpcExceptionHandler;
 import org.springframework.grpc.server.exception.GrpcExceptionHandlerInterceptor;
 import org.springframework.grpc.server.lifecycle.GrpcServerLifecycle;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.grpc.BindableService;
 
 /**
  * Tests for {@link GrpcExceptionHandlerAutoConfiguration}.

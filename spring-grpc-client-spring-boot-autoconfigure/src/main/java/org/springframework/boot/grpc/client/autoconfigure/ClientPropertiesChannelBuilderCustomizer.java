@@ -22,13 +22,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import io.grpc.ManagedChannelBuilder;
-
 import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.boot.grpc.client.autoconfigure.GrpcClientProperties.ChannelConfig;
 import org.springframework.grpc.client.GrpcChannelBuilderCustomizer;
 import org.springframework.grpc.client.interceptor.DefaultDeadlineSetupClientInterceptor;
 import org.springframework.util.unit.DataSize;
+
+import io.grpc.ManagedChannelBuilder;
 
 /**
  * A {@link GrpcChannelBuilderCustomizer} that maps {@link GrpcClientProperties client

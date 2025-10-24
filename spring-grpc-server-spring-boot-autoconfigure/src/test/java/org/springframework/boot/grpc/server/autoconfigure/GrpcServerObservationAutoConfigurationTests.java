@@ -16,13 +16,11 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 import java.util.Map;
 
-import io.grpc.BindableService;
-import io.grpc.ServerInterceptor;
-import io.micrometer.core.instrument.binder.grpc.ObservationGrpcServerInterceptor;
-import io.micrometer.observation.ObservationRegistry;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,7 +31,10 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.grpc.server.GlobalServerInterceptor;
 import org.springframework.grpc.server.GrpcServerFactory;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.grpc.BindableService;
+import io.grpc.ServerInterceptor;
+import io.micrometer.core.instrument.binder.grpc.ObservationGrpcServerInterceptor;
+import io.micrometer.observation.ObservationRegistry;
 
 /**
  * Tests for the {@link GrpcServerObservationAutoConfiguration}.

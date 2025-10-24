@@ -16,9 +16,9 @@
 
 package org.springframework.boot.grpc.server.autoconfigure;
 
-import io.grpc.inprocess.InProcessServerBuilder;
-
 import org.springframework.boot.context.properties.PropertyMapper;
+
+import io.grpc.inprocess.InProcessServerBuilder;
 
 /**
  * Helper class used to map {@link GrpcServerProperties} to

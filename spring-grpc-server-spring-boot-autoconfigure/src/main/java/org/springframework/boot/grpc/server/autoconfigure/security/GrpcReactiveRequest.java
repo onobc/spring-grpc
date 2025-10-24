@@ -23,16 +23,16 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import reactor.core.publisher.Mono;
-
 import org.springframework.boot.grpc.server.autoconfigure.security.GrpcServletRequest.GrpcServletRequestMatcher;
-import org.springframework.boot.security.reactive.ApplicationContextServerWebExchangeMatcher;
+import org.springframework.boot.security.web.reactive.ApplicationContextServerWebExchangeMatcher;
 import org.springframework.grpc.server.service.GrpcServiceDiscoverer;
 import org.springframework.security.web.server.util.matcher.OrServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.server.ServerWebExchange;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Factory for a request matcher used to match against resource locations for gRPC

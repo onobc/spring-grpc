@@ -16,18 +16,17 @@
 
 package org.springframework.boot.grpc.client.autoconfigure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import io.grpc.Codec;
-import io.grpc.CompressorRegistry;
-import io.grpc.DecompressorRegistry;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.kotlin.AbstractCoroutineStub;
-import io.grpc.netty.NettyChannelBuilder;
-import io.grpc.stub.AbstractStub;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -50,12 +49,14 @@ import org.springframework.grpc.client.InProcessGrpcChannelFactory;
 import org.springframework.grpc.client.NettyGrpcChannelFactory;
 import org.springframework.grpc.client.ShadedNettyGrpcChannelFactory;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
+import io.grpc.Codec;
+import io.grpc.CompressorRegistry;
+import io.grpc.DecompressorRegistry;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.kotlin.AbstractCoroutineStub;
+import io.grpc.netty.NettyChannelBuilder;
+import io.grpc.stub.AbstractStub;
 
 /**
  * Tests for {@link GrpcClientAutoConfiguration}.

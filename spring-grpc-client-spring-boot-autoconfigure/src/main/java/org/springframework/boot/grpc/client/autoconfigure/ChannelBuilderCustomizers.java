@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.grpc.ManagedChannelBuilder;
-
 import org.springframework.boot.util.LambdaSafe;
 import org.springframework.grpc.client.GrpcChannelBuilderCustomizer;
+
+import io.grpc.ManagedChannelBuilder;
 
 /**
  * Invokes the available {@link GrpcChannelBuilderCustomizer} instances for a given

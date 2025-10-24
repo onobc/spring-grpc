@@ -16,8 +16,10 @@
 
 package org.springframework.boot.grpc.server.autoconfigure.security;
 
-import io.grpc.BindableService;
-import io.grpc.ServerServiceDefinition;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,7 +33,7 @@ import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.grpc.server.autoconfigure.GrpcServerAutoConfiguration;
 import org.springframework.boot.grpc.server.autoconfigure.GrpcServerFactoryAutoConfiguration;
 import org.springframework.boot.logging.LogLevel;
-import org.springframework.boot.security.autoconfigure.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.web.context.servlet.AnnotationConfigServletWebApplicationContext;
@@ -43,9 +45,8 @@ import org.springframework.grpc.server.security.AuthenticationProcessInterceptor
 import org.springframework.grpc.server.security.GrpcSecurity;
 import org.springframework.security.config.Customizer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
+import io.grpc.BindableService;
+import io.grpc.ServerServiceDefinition;
 
 /**
  * Tests for {@link GrpcServerAutoConfiguration}.
@@ -107,7 +108,7 @@ class OAuth2ResourceServerAutoConfigurationTests {
 	void notConfiguredInWebApplication() {
 		new WebApplicationContextRunner().withConfiguration(AutoConfigurations.of(
 				GrpcServerFactoryAutoConfiguration.class, GrpcServerAutoConfiguration.class,
-				SecurityAutoConfiguration.class,
+				ServletWebSecurityAutoConfiguration.class,
 				org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration.class,
 				OAuth2ResourceServerAutoConfiguration.class, GrpcSecurityAutoConfiguration.class))
 			.withBean(BindableService.class, () -> this.service)
@@ -120,7 +121,7 @@ class OAuth2ResourceServerAutoConfigurationTests {
 		new WebApplicationContextRunner(WebApplicationContextRunner.withMockServletContext(MyContext::new))
 			.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
 			.withConfiguration(AutoConfigurations.of(GrpcServerFactoryAutoConfiguration.class,
-					GrpcServerAutoConfiguration.class, SecurityAutoConfiguration.class,
+					GrpcServerAutoConfiguration.class, ServletWebSecurityAutoConfiguration.class,
 					org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration.class,
 					OAuth2ResourceServerAutoConfiguration.class, GrpcSecurityAutoConfiguration.class))
 			.withPropertyValues("spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:9000")
@@ -132,7 +133,8 @@ class OAuth2ResourceServerAutoConfigurationTests {
 	void configuredInWebApplicationWithGrpcNative() {
 		new WebApplicationContextRunner(WebApplicationContextRunner.withMockServletContext(MyContext::new))
 			.withConfiguration(AutoConfigurations.of(GrpcServerFactoryAutoConfiguration.class,
-					GrpcServerAutoConfiguration.class, SslAutoConfiguration.class, SecurityAutoConfiguration.class,
+					GrpcServerAutoConfiguration.class, SslAutoConfiguration.class,
+					ServletWebSecurityAutoConfiguration.class,
 					org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration.class,
 					OAuth2ResourceServerAutoConfiguration.class, GrpcSecurityAutoConfiguration.class))
 			.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))

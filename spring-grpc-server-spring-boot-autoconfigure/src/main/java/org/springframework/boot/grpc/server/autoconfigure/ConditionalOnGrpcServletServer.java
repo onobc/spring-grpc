@@ -21,12 +21,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import io.grpc.servlet.jakarta.GrpcServlet;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Conditional;
+
+import io.grpc.servlet.jakarta.GrpcServlet;
 
 /**
  * {@link Conditional @Conditional} that determines if the Servlet container should be

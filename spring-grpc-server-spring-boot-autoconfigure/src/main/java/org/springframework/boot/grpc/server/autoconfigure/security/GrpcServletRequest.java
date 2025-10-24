@@ -23,15 +23,15 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.boot.security.servlet.ApplicationContextRequestMatcher;
+import org.springframework.boot.security.web.servlet.ApplicationContextRequestMatcher;
 import org.springframework.grpc.server.service.GrpcServiceDiscoverer;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Factory for a request matcher used to match against resource locations for gRPC
