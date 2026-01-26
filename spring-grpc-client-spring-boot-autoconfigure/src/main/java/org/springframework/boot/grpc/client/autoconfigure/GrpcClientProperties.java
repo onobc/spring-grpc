@@ -20,8 +20,9 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.jspecify.annotations.Nullable;
 
@@ -35,6 +36,7 @@ import org.springframework.grpc.client.BlockingStubFactory;
 import org.springframework.grpc.client.NegotiationType;
 import org.springframework.grpc.client.StubFactory;
 import org.springframework.grpc.client.VirtualTargets;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.unit.DataSize;
 
 import io.grpc.ManagedChannel;
@@ -55,14 +57,18 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 	private final Map<String, ChannelConfig> channels = new HashMap<>();
 
 	/**
-	 * Default configuration that named channels can inherit from.
-	 */
-	private final Channel channel = new Channel();
-
-	/**
-	 * The default channel configuration to use for new channels.
+	 * The default channel configuration which is used as a template when creating new
+	 * channels and as the default channel for automatic client configuration.
 	 */
 	private final ChannelConfig defaultChannel = new ChannelConfig();
+
+	/**
+	 * The default values to be applied to all returned channels whose 'inheritDefaults'
+	 * property is set to true - the default value for each property is only applied when
+	 * the default value has been specified and the property has not already been
+	 * explicitly set on the channel.
+	 */
+	private final ChannelConfig channelDefaults = new ChannelConfig();
 
 	/**
 	 * Default stub factory to use for all channels.
@@ -80,8 +86,8 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		return this.channels;
 	}
 
-	public Channel getChannel() {
-		return this.channel;
+	public ChannelConfig getChannelDefaults() {
+		return this.channelDefaults;
 	}
 
 	public ChannelConfig getDefaultChannel() {
@@ -102,24 +108,30 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 	}
 
 	/**
-	 * Gets the configured channel with the given name. If no channel is configured for
-	 * the specified name then one is created using the default channel as a template.
+	 * Gets the configured channel with the given name (e.g. the 'foo' channel would be
+	 * configured using properties prefixed with 'spring.grpc.client.channels.foo'). If no
+	 * channel is configured for the specified name then one is created using the default
+	 * channel (i.e. 'spring.grpc.client.default-channel') as a template. In either case,
+	 * if the channel has its {@link ChannelConfig#inheritDefaults inheritDefaults}
+	 * property set to {@code true} then the global channel defaults (i.e.
+	 * 'spring.grpc.client.channel-defaults') are applied to properties that were not
+	 * explicitly set on the channel by the user.
 	 * @param name the name of the channel
 	 * @return the configured channel if found, or a newly created channel using the
-	 * default channel as a template
+	 * default channel as a template with channel defaults applied when the channel
+	 * {@link ChannelConfig#inheritDefaults inheritDefaults} property is set to
+	 * {@code true}
 	 */
 	public ChannelConfig getChannel(String name) {
 		if ("default".equals(name)) {
-			return this.defaultChannel;
+			return this.defaultChannel.applyDefaultsIfNecessary(this.channelDefaults);
 		}
 		ChannelConfig namedChannel = this.channels.get(name);
 		if (namedChannel != null) {
-			if (namedChannel.isInheritDefaults()) {
-				return this.channel.getDefaults().mergeWith(namedChannel);
-			}
-			return namedChannel;
+			return namedChannel.applyDefaultsIfNecessary(this.channelDefaults);
 		}
 		ChannelConfig newChannel = this.defaultChannel.copy();
+		newChannel = newChannel.applyDefaultsIfNecessary(this.channelDefaults);
 		String address = name;
 		if (!name.contains(":/") && !name.startsWith("unix:")) {
 			if (name.contains(":")) {
@@ -146,6 +158,23 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		return this.environment.resolvePlaceholders(address);
 	}
 
+	private static <T> Predicate<T> notModifiedByUserAndDefaultsSpecified(
+			Supplier<T> baseConfigValueSupplier,
+			Supplier<T> candidateConfigValueSupplier) {
+		return (T channelDefaultsConfigValue) -> {
+			T baseConfigValue = baseConfigValueSupplier.get();
+			T candidateConfigValue = candidateConfigValueSupplier.get();
+			// if field in candidate is changed from coded defaults in ChannelConfig then
+			// user modified it so default should not be applied
+			if (!ObjectUtils.nullSafeEquals(baseConfigValue, candidateConfigValue)) {
+				return false;
+			}
+			// if field in defaults is changed from coded defaults in ChannelConfig
+			// then user specified the default so it needs to be applied to candidate
+			return !ObjectUtils.nullSafeEquals(baseConfigValue, channelDefaultsConfigValue);
+		};
+	}
+
 	/**
 	 * Represents the configuration for a {@link ManagedChannel gRPC channel}.
 	 */
@@ -154,7 +183,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		/**
 		 * The target address uri to connect to.
 		 */
-		private @Nullable String address;
+		private String address = "static://localhost:9090";
 
 		/**
 		 * The default deadline for RPCs performed on this channel.
@@ -164,12 +193,12 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		/**
 		 * The load balancing policy the channel should use.
 		 */
-		private @Nullable String defaultLoadBalancingPolicy;
+		private String defaultLoadBalancingPolicy = "round_robin";
 
 		/**
 		 * Whether keep alive is enabled on the channel.
 		 */
-		private @Nullable Boolean enableKeepAlive;
+		private boolean enableKeepAlive;
 
 		private final Health health = new Health();
 
@@ -177,7 +206,12 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		 * The duration without ongoing RPCs before going to idle mode.
 		 */
 		@DurationUnit(ChronoUnit.SECONDS)
-		private @Nullable Duration idleTimeout;
+		private Duration idleTimeout = Duration.ofSeconds(20);
+
+		/**
+		 * Whether to inherit settings from the channel defaults configuration.
+		 */
+		private boolean inheritDefaults;
 
 		/**
 		 * The delay before sending a keepAlive. Note that shorter intervals increase the
@@ -185,42 +219,42 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		 * 'permitKeepAliveTime' on the server.
 		 */
 		@DurationUnit(ChronoUnit.SECONDS)
-		private @Nullable Duration keepAliveTime;
+		private Duration keepAliveTime = Duration.ofMinutes(5);
 
 		/**
 		 * The default timeout for a keepAlives ping request.
 		 */
 		@DurationUnit(ChronoUnit.SECONDS)
-		private @Nullable Duration keepAliveTimeout;
+		private Duration keepAliveTimeout = Duration.ofSeconds(20);
 
 		/**
 		 * Whether a keepAlive will be performed when there are no outstanding RPC on a
 		 * connection.
 		 */
-		private @Nullable Boolean keepAliveWithoutCalls;
+		private boolean keepAliveWithoutCalls;
 
 		/**
 		 * Maximum message size allowed to be received by the channel (default 4MiB). Set
 		 * to '-1' to use the highest possible limit (not recommended).
 		 */
-		private @Nullable DataSize maxInboundMessageSize;
+		private DataSize maxInboundMessageSize = DataSize.ofBytes(4194304);
 
 		/**
 		 * Maximum metadata size allowed to be received by the channel (default 8KiB). Set
 		 * to '-1' to use the highest possible limit (not recommended).
 		 */
-		private @Nullable DataSize maxInboundMetadataSize;
+		private DataSize maxInboundMetadataSize = DataSize.ofBytes(8192);
 
 		/**
 		 * The negotiation type for the channel.
 		 */
-		private @Nullable NegotiationType negotiationType;
+		private NegotiationType negotiationType = NegotiationType.PLAINTEXT;
 
 		/**
 		 * Flag to say that strict SSL checks are not enabled (so the remote certificate
 		 * could be anonymous).
 		 */
-		private @Nullable Boolean secure;
+		private boolean secure = true;
 
 		/**
 		 * Map representation of the service config to use for the channel.
@@ -234,13 +268,8 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		 */
 		private @Nullable String userAgent;
 
-		/**
-		 * Whether to inherit settings from the channel defaults configuration.
-		 */
-		private boolean inheritDefaults;
-
 		public String getAddress() {
-			return Objects.requireNonNullElse(this.address, "static://localhost:9090");
+			return this.address;
 		}
 
 		public void setAddress(final String address) {
@@ -256,7 +285,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public String getDefaultLoadBalancingPolicy() {
-			return Objects.requireNonNullElse(this.defaultLoadBalancingPolicy, "round_robin");
+			return this.defaultLoadBalancingPolicy;
 		}
 
 		public void setDefaultLoadBalancingPolicy(final String defaultLoadBalancingPolicy) {
@@ -264,7 +293,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public boolean isEnableKeepAlive() {
-			return Objects.requireNonNullElse(this.enableKeepAlive, false);
+			return this.enableKeepAlive;
 		}
 
 		public void setEnableKeepAlive(boolean enableKeepAlive) {
@@ -276,15 +305,23 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public Duration getIdleTimeout() {
-			return Objects.requireNonNullElse(this.idleTimeout, Duration.ofSeconds(20));
+			return this.idleTimeout;
 		}
 
 		public void setIdleTimeout(Duration idleTimeout) {
 			this.idleTimeout = idleTimeout;
 		}
 
+		public boolean isInheritDefaults() {
+			return this.inheritDefaults;
+		}
+
+		public void setInheritDefaults(boolean inheritDefaults) {
+			this.inheritDefaults = inheritDefaults;
+		}
+
 		public Duration getKeepAliveTime() {
-			return Objects.requireNonNullElse(this.keepAliveTime, Duration.ofMinutes(5));
+			return this.keepAliveTime;
 		}
 
 		public void setKeepAliveTime(Duration keepAliveTime) {
@@ -292,7 +329,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public Duration getKeepAliveTimeout() {
-			return Objects.requireNonNullElse(this.keepAliveTimeout, Duration.ofSeconds(20));
+			return this.keepAliveTimeout;
 		}
 
 		public void setKeepAliveTimeout(Duration keepAliveTimeout) {
@@ -300,7 +337,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public boolean isKeepAliveWithoutCalls() {
-			return Objects.requireNonNullElse(this.keepAliveWithoutCalls, false);
+			return this.keepAliveWithoutCalls;
 		}
 
 		public void setKeepAliveWithoutCalls(boolean keepAliveWithoutCalls) {
@@ -308,7 +345,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public DataSize getMaxInboundMessageSize() {
-			return Objects.requireNonNullElse(this.maxInboundMessageSize, DataSize.ofBytes(4194304));
+			return this.maxInboundMessageSize;
 		}
 
 		public void setMaxInboundMessageSize(final DataSize maxInboundMessageSize) {
@@ -317,7 +354,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public DataSize getMaxInboundMetadataSize() {
-			return Objects.requireNonNullElse(this.maxInboundMetadataSize, DataSize.ofBytes(8192));
+			return this.maxInboundMetadataSize;
 		}
 
 		public void setMaxInboundMetadataSize(DataSize maxInboundMetadataSize) {
@@ -338,7 +375,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public NegotiationType getNegotiationType() {
-			return Objects.requireNonNullElse(this.negotiationType, NegotiationType.PLAINTEXT);
+			return this.negotiationType;
 		}
 
 		public void setNegotiationType(NegotiationType negotiationType) {
@@ -346,7 +383,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 		}
 
 		public boolean isSecure() {
-			return Objects.requireNonNullElse(this.secure, true);
+			return this.secure;
 		}
 
 		public void setSecure(boolean secure) {
@@ -369,14 +406,6 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 			this.userAgent = userAgent;
 		}
 
-		public boolean isInheritDefaults() {
-			return this.inheritDefaults;
-		}
-
-		public void setInheritDefaults(boolean inheritDefaults) {
-			this.inheritDefaults = inheritDefaults;
-		}
-
 		/**
 		 * Provide a copy of the channel instance.
 		 * @return a copy of the channel instance.
@@ -388,6 +417,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 			copy.negotiationType = this.negotiationType;
 			copy.enableKeepAlive = this.enableKeepAlive;
 			copy.idleTimeout = this.idleTimeout;
+			copy.inheritDefaults = this.inheritDefaults;
 			copy.keepAliveTime = this.keepAliveTime;
 			copy.keepAliveTimeout = this.keepAliveTimeout;
 			copy.keepAliveWithoutCalls = this.keepAliveWithoutCalls;
@@ -395,7 +425,6 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 			copy.maxInboundMetadataSize = this.maxInboundMetadataSize;
 			copy.userAgent = this.userAgent;
 			copy.defaultDeadline = this.defaultDeadline;
-			copy.inheritDefaults = this.inheritDefaults;
 			copy.health.copyValuesFrom(this.getHealth());
 			copy.secure = this.secure;
 			copy.ssl.copyValuesFrom(this.getSsl());
@@ -403,38 +432,72 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 			return copy;
 		}
 
-		ChannelConfig mergeWith(ChannelConfig other) {
-			ChannelConfig merged = this.copy();
-			PropertyMapper map = PropertyMapper.get();
-			map.from(other.address).to(merged::setAddress);
-			map.from(other.defaultDeadline).to(merged::setDefaultDeadline);
-			map.from(other.defaultLoadBalancingPolicy).to(merged::setDefaultLoadBalancingPolicy);
-			map.from(other.enableKeepAlive).to(merged::setEnableKeepAlive);
-			map.from(other.idleTimeout).to(merged::setIdleTimeout);
-			map.from(other.keepAliveTime).to(merged::setKeepAliveTime);
-			map.from(other.keepAliveTimeout).to(merged::setKeepAliveTimeout);
-			map.from(other.keepAliveWithoutCalls).to(merged::setKeepAliveWithoutCalls);
-			map.from(other.maxInboundMessageSize).to(merged::setMaxInboundMessageSize);
-			map.from(other.maxInboundMetadataSize).to(merged::setMaxInboundMetadataSize);
-			map.from(other.negotiationType).to(merged::setNegotiationType);
-			map.from(other.secure).to(merged::setSecure);
-			map.from(other.userAgent).to(merged::setUserAgent);
-			merged.health.mergeWith(other.health);
-			merged.ssl.mergeWith(other.ssl);
-			if (!other.serviceConfig.isEmpty()) {
-				merged.serviceConfig.putAll(other.serviceConfig);
-			}
-			return merged;
-		}
-
 		/**
-		 * Extracts the service configuration from the client properties, respecting the
-		 * yaml lists (e.g. `retryPolicy`).
-		 * @return the map for the `serviceConfig` property
+		 * Applies values from {@code channelDefaults} to each field in this config that
+		 * was not modified by the user.
+		 * <p>
+		 * It is expected that all user specified properties will already be set on this
+		 * instance. Therefore, we can detect a change in each field by comparing the value
+		 * from a new config instance with the value from this instance.
+		 *
+		 * @param channelDefaultsConfig the defaults to apply
+		 * @return the same candidate instance passed in with defaults applied where necessary
 		 */
-		@SuppressWarnings("NullAway")
-		public Map<String, Object> extractServiceConfig() {
-			return ConfigurationPropertiesMapUtils.convertIntegerKeyedMapsToLists(getServiceConfig());
+		private ChannelConfig applyDefaultsIfNecessary(ChannelConfig channelDefaultsConfig) {
+			if (!this.isInheritDefaults()) {
+				return this;
+			}
+			ChannelConfig baseConfig = new ChannelConfig();
+			PropertyMapper map = PropertyMapper.get();
+
+			map.from(channelDefaultsConfig::getAddress)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getAddress, this::getAddress))
+					.to(this::setAddress);
+			map.from(channelDefaultsConfig::getDefaultDeadline)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getDefaultDeadline, this::getDefaultDeadline))
+					.to(this::setDefaultDeadline);
+			map.from(channelDefaultsConfig::getDefaultLoadBalancingPolicy)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getDefaultLoadBalancingPolicy, this::getDefaultLoadBalancingPolicy))
+					.to(this::setDefaultLoadBalancingPolicy);
+			map.from(channelDefaultsConfig::isEnableKeepAlive)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::isEnableKeepAlive, this::isEnableKeepAlive))
+					.to(this::setEnableKeepAlive);
+			map.from(channelDefaultsConfig::getIdleTimeout)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getIdleTimeout, this::getIdleTimeout))
+					.to(this::setIdleTimeout);
+			map.from(channelDefaultsConfig::getKeepAliveTime)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getKeepAliveTime, this::getKeepAliveTime))
+					.to(this::setKeepAliveTime);
+			map.from(channelDefaultsConfig::getKeepAliveTimeout)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getKeepAliveTimeout, this::getKeepAliveTimeout))
+					.to(this::setKeepAliveTimeout);
+			map.from(channelDefaultsConfig::isKeepAliveWithoutCalls)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::isKeepAliveWithoutCalls, this::isKeepAliveWithoutCalls))
+					.to(this::setKeepAliveWithoutCalls);
+			map.from(channelDefaultsConfig::getMaxInboundMessageSize)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getMaxInboundMessageSize, this::getMaxInboundMessageSize))
+					.to(this::setMaxInboundMessageSize);
+			map.from(channelDefaultsConfig::getMaxInboundMetadataSize)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getMaxInboundMetadataSize, this::getMaxInboundMetadataSize))
+					.to(this::setMaxInboundMetadataSize);
+			map.from(channelDefaultsConfig::getNegotiationType)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getNegotiationType, this::getNegotiationType))
+					.to(this::setNegotiationType);
+			map.from(channelDefaultsConfig::isSecure)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::isSecure, this::isSecure))
+					.to(this::setSecure);
+			map.from(channelDefaultsConfig::getUserAgent)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getUserAgent, this::getUserAgent))
+					.to(this::setUserAgent);
+			this.getHealth().applyDefaultsIfNecessary(channelDefaultsConfig.getHealth());
+			this.getSsl().applyDefaultsIfNecessary(channelDefaultsConfig.getSsl());
+			map.from(channelDefaultsConfig::getServiceConfig)
+					.when(notModifiedByUserAndDefaultsSpecified(baseConfig::getServiceConfig, this::getServiceConfig))
+					.to((channelDefaultsServiceConfig) -> {
+						this.getServiceConfig().clear();
+						this.getServiceConfig().putAll(channelDefaultsServiceConfig);
+					});
+			return this;
 		}
 
 		public static class Health {
@@ -442,7 +505,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 			/**
 			 * Whether to enable client-side health check for the channel.
 			 */
-			private @Nullable Boolean enabled;
+			private boolean enabled;
 
 			/**
 			 * Name of the service to check health on.
@@ -450,7 +513,7 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 			private @Nullable String serviceName;
 
 			public boolean isEnabled() {
-				return Objects.requireNonNullElse(this.enabled, false);
+				return this.enabled;
 			}
 
 			public void setEnabled(boolean enabled) {
@@ -473,11 +536,16 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 				this.enabled = other.enabled;
 				this.serviceName = other.serviceName;
 			}
-
-			void mergeWith(Health other) {
+			
+			void applyDefaultsIfNecessary(Health channelDefaultsConfigHealth) {
 				PropertyMapper map = PropertyMapper.get();
-				map.from(other.enabled).to(this::setEnabled);
-				map.from(other.serviceName).to(this::setServiceName);
+				Health baseConfigHealth = new ChannelConfig().getHealth();
+				map.from(channelDefaultsConfigHealth::isEnabled)
+						.when(notModifiedByUserAndDefaultsSpecified(baseConfigHealth::isEnabled, this::isEnabled))
+						.to(this::setEnabled);
+				map.from(channelDefaultsConfigHealth::getServiceName)
+						.when(notModifiedByUserAndDefaultsSpecified(baseConfigHealth::getServiceName, this::getServiceName))
+						.to(this::setServiceName);
 			}
 
 		}
@@ -524,25 +592,16 @@ public class GrpcClientProperties implements EnvironmentAware, VirtualTargets {
 				this.bundle = other.bundle;
 			}
 
-			void mergeWith(Ssl other) {
+			void applyDefaultsIfNecessary(Ssl channelDefaultsConfigSsl) {
 				PropertyMapper map = PropertyMapper.get();
-				map.from(other.enabled).to(this::setEnabled);
-				map.from(other.bundle).to(this::setBundle);
+				Ssl baseConfigSsl = new ChannelConfig().getSsl();
+				map.from(channelDefaultsConfigSsl::isEnabled)
+						.when(notModifiedByUserAndDefaultsSpecified(baseConfigSsl::isEnabled, baseConfigSsl::isEnabled))
+						.to(this::setEnabled);
+				map.from(channelDefaultsConfigSsl::getBundle)
+						.when(notModifiedByUserAndDefaultsSpecified(baseConfigSsl::getBundle, baseConfigSsl::getBundle))
+						.to(this::setBundle);
 			}
-
-		}
-
-	}
-
-	/**
-	 * Container for channel defaults configuration.
-	 */
-	public static class Channel {
-
-		private final ChannelConfig defaults = new ChannelConfig();
-
-		public ChannelConfig getDefaults() {
-			return this.defaults;
 		}
 
 	}
