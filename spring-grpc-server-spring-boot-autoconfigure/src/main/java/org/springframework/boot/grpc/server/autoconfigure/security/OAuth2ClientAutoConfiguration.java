@@ -44,7 +44,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 @AutoConfiguration(
 		afterName = "org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration")
 @ConditionalOnSpringGrpc
-@ConditionalOnClass(InMemoryClientRegistrationRepository.class)
+@ConditionalOnClass({ OAuth2ClientProperties.class, InMemoryClientRegistrationRepository.class })
 @ConditionalOnOAuth2ClientRegistrationProperties
 @EnableConfigurationProperties(OAuth2ClientProperties.class)
 public final class OAuth2ClientAutoConfiguration {
