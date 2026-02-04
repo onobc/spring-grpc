@@ -18,16 +18,27 @@ package org.springframework.boot.grpc.client.autoconfigure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.verification.VerificationMode;
 
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
@@ -67,6 +78,11 @@ class GrpcClientPropertiesTests {
 		}
 
 		@Test
+		void channelDefaultsWithDefaultValues() {
+			this.withDefaultValues("channel-defaults", GrpcClientProperties::getChannelDefaults);
+		}
+
+		@Test
 		void specificChannelWithDefaultValues() {
 			this.withDefaultValues("channels.c1", (p) -> p.getChannel("c1"));
 		}
@@ -85,6 +101,7 @@ class GrpcClientPropertiesTests {
 			assertThat(channel.getNegotiationType()).isEqualTo(NegotiationType.PLAINTEXT);
 			assertThat(channel.isEnableKeepAlive()).isFalse();
 			assertThat(channel.getIdleTimeout()).isEqualTo(Duration.ofSeconds(20));
+			assertThat(channel.isInheritDefaults()).isFalse();
 			assertThat(channel.getKeepAliveTime()).isEqualTo(Duration.ofMinutes(5));
 			assertThat(channel.getKeepAliveTimeout()).isEqualTo(Duration.ofSeconds(20));
 			assertThat(channel.isEnableKeepAlive()).isFalse();
@@ -104,6 +121,11 @@ class GrpcClientPropertiesTests {
 		}
 
 		@Test
+		void channelDefaultsWithSpecifiedValues() {
+			this.withSpecifiedValues("channel-defaults", GrpcClientProperties::getChannelDefaults);
+		}
+
+		@Test
 		void specificChannelWithSpecifiedValues() {
 			this.withSpecifiedValues("channels.c1", (p) -> p.getChannel("c1"));
 		}
@@ -119,6 +141,7 @@ class GrpcClientPropertiesTests {
 			map.put("%s.negotiation-type".formatted(propPrefix), "plaintext_upgrade");
 			map.put("%s.enable-keep-alive".formatted(propPrefix), "true");
 			map.put("%s.idle-timeout".formatted(propPrefix), "1m");
+			map.put("%s.inherit-defaults".formatted(propPrefix), "true");
 			map.put("%s.keep-alive-time".formatted(propPrefix), "200s");
 			map.put("%s.keep-alive-timeout".formatted(propPrefix), "60000ms");
 			map.put("%s.keep-alive-without-calls".formatted(propPrefix), "true");
@@ -137,6 +160,7 @@ class GrpcClientPropertiesTests {
 			assertThat(channel.getNegotiationType()).isEqualTo(NegotiationType.PLAINTEXT_UPGRADE);
 			assertThat(channel.isEnableKeepAlive()).isTrue();
 			assertThat(channel.getIdleTimeout()).isEqualTo(Duration.ofMinutes(1));
+			assertThat(channel.isInheritDefaults()).isTrue();
 			assertThat(channel.getKeepAliveTime()).isEqualTo(Duration.ofSeconds(200));
 			assertThat(channel.getKeepAliveTimeout()).isEqualTo(Duration.ofMillis(60000));
 			assertThat(channel.isEnableKeepAlive()).isTrue();
@@ -208,15 +232,80 @@ class GrpcClientPropertiesTests {
 			assertThat(properties).extracting("channels", InstanceOfAssertFactories.MAP).isEmpty();
 		}
 
+		@ParameterizedTest
+		@DisplayName("WithDefaultNameReturnsDefaultChannelAnd")
+		@MethodSource
+		void withDefaultNameReturnsDefaultChannelsAnd(Boolean inheritDefaults, boolean shouldBeApplied) {
+			Map<String, String> map = new HashMap<>();
+			map.put("spring.grpc.client.channel-defaults.address", "base-default-service:9090");
+			if (inheritDefaults != null) {
+				map.put("spring.grpc.client.default-channel.inherit-defaults", inheritDefaults.toString());
+			}
+			GrpcClientProperties properties = bindProperties(map);
+			ChannelConfigUtils configUtilsSpy = spy(new ChannelConfigUtils());
+			properties.setChannelConfigUtils(configUtilsSpy);
+
+			var channel = properties.getChannel("default");
+
+			// verify config utils called with same channel that is returned
+			VerificationMode timesExpected = shouldBeApplied ? times(1) : never();
+			verify(configUtilsSpy, timesExpected).applyDefaultsIfNecessary(channel, properties.getChannelDefaults());
+			if (shouldBeApplied) {
+				assertThat(channel.getAddress()).isEqualTo("base-default-service:9090");
+			}
+			else {
+				assertThat(channel.getAddress()).isNotEqualTo("base-default-service:9090");
+			}
+		}
+
+		static Stream<Arguments> withDefaultNameReturnsDefaultChannelsAnd() {
+			return Stream.of(argumentSet("doesNotApplyDefaultsWhenInheritDefaultsNotSpecified", null, false),
+					argumentSet("doesNotApplyDefaultsWhenInheritDefaultsFalse", Boolean.FALSE, false),
+					argumentSet("doesApplyDefaultsWhenInheritDefaultsTrue", Boolean.TRUE, true));
+		}
+
 		@Test
-		void withKnownNameReturnsMergedChannel() {
+		void withKnownNameReturnsKnownChannel() {
 			Map<String, String> map = new HashMap<>();
 			// we have to at least bind one property or bind() fails
 			map.put("spring.grpc.client.channels.c1.enable-keep-alive", "false");
 			GrpcClientProperties properties = bindProperties(map);
 			var channel = properties.getChannel("c1");
-			assertThat(properties).extracting("channels", InstanceOfAssertFactories.MAP).containsKey("c1");
-			assertThat(channel.isEnableKeepAlive()).isFalse();
+			assertThat(properties).extracting("channels", InstanceOfAssertFactories.MAP)
+				.containsExactly(entry("c1", channel));
+		}
+
+		@ParameterizedTest
+		@DisplayName("WithKnownNameReturnsKnownChannelAnd")
+		@MethodSource
+		void withKnownNameReturnsKnownChannelAnd(Boolean inheritDefaults, boolean shouldBeApplied) {
+			Map<String, String> map = new HashMap<>();
+			map.put("spring.grpc.client.channel-defaults.address", "base-default-service:9090");
+			map.put("spring.grpc.client.channels.my-channel.enable-keep-alive", "false");
+			if (inheritDefaults != null) {
+				map.put("spring.grpc.client.channels.my-channel.inherit-defaults", inheritDefaults.toString());
+			}
+			GrpcClientProperties properties = bindProperties(map);
+			ChannelConfigUtils configUtilsSpy = spy(new ChannelConfigUtils());
+			properties.setChannelConfigUtils(configUtilsSpy);
+
+			var channel = properties.getChannel("my-channel");
+
+			// verify config utils called with same channel that is returned
+			VerificationMode timesExpected = shouldBeApplied ? times(1) : never();
+			verify(configUtilsSpy, timesExpected).applyDefaultsIfNecessary(channel, properties.getChannelDefaults());
+			if (shouldBeApplied) {
+				assertThat(channel.getAddress()).isEqualTo("base-default-service:9090");
+			}
+			else {
+				assertThat(channel.getAddress()).isNotEqualTo("base-default-service:9090");
+			}
+		}
+
+		static Stream<Arguments> withKnownNameReturnsKnownChannelAnd() {
+			return Stream.of(argumentSet("doesNotApplyDefaultsWhenInheritDefaultsNotSpecified", null, false),
+					argumentSet("doesNotApplyDefaultsWhenInheritDefaultsFalse", Boolean.FALSE, false),
+					argumentSet("doesApplyDefaultsWhenInheritDefaultsTrue", Boolean.TRUE, true));
 		}
 
 		@Test
@@ -228,6 +317,7 @@ class GrpcClientPropertiesTests {
 			defaultChannel.getHealth().setServiceName("custom-service");
 			defaultChannel.setEnableKeepAlive(true);
 			defaultChannel.setIdleTimeout(Duration.ofMinutes(1));
+			defaultChannel.setInheritDefaults(true);
 			defaultChannel.setKeepAliveTime(Duration.ofMinutes(4));
 			defaultChannel.setKeepAliveTimeout(Duration.ofMinutes(6));
 			defaultChannel.setKeepAliveWithoutCalls(true);
@@ -240,6 +330,7 @@ class GrpcClientPropertiesTests {
 			defaultChannel.getSsl().setBundle("custom-bundle");
 			var properties = newProperties(defaultChannel, Collections.emptyMap());
 			var newChannel = properties.getChannel("new-channel");
+			assertThat(newChannel).isNotSameAs(defaultChannel);
 			assertThat(newChannel).usingRecursiveComparison().isEqualTo(defaultChannel);
 			assertThat(properties).extracting("channels", InstanceOfAssertFactories.MAP).isEmpty();
 		}
@@ -253,6 +344,38 @@ class GrpcClientPropertiesTests {
 			assertThat(newChannel).usingRecursiveComparison().ignoringFields("address").isEqualTo(defaultChannel);
 			assertThat(newChannel).hasFieldOrPropertyWithValue("address", "static://other-server:8888");
 			assertThat(properties).extracting("channels", InstanceOfAssertFactories.MAP).isEmpty();
+		}
+
+		@ParameterizedTest
+		@DisplayName("WithUnknownNameReturnsNewChannelWithCopiedDefaultsAnd")
+		@MethodSource
+		void withUnknownNameReturnsNewChannelWithCopiedDefaultsAnd(Boolean inheritDefaults, boolean shouldBeApplied) {
+			Map<String, String> map = new HashMap<>();
+			map.put("spring.grpc.client.channel-defaults.address", "static://base-default-service:9090");
+			if (inheritDefaults != null) {
+				map.put("spring.grpc.client.default-channel.inherit-defaults", inheritDefaults.toString());
+			}
+			GrpcClientProperties properties = bindProperties(map);
+			ChannelConfigUtils configUtilsSpy = spy(new ChannelConfigUtils());
+			properties.setChannelConfigUtils(configUtilsSpy);
+
+			var channel = properties.getChannel("foo-channel");
+
+			// verify config utils called with same channel that is returned
+			VerificationMode timesExpected = shouldBeApplied ? times(1) : never();
+			verify(configUtilsSpy, timesExpected).applyDefaultsIfNecessary(channel, properties.getChannelDefaults());
+			if (shouldBeApplied) {
+				assertThat(channel.getAddress()).isEqualTo("static://base-default-service:9090");
+			}
+			else {
+				assertThat(channel.getAddress()).isNotEqualTo("static://base-default-service:9090");
+			}
+		}
+
+		static Stream<Arguments> withUnknownNameReturnsNewChannelWithCopiedDefaultsAnd() {
+			return Stream.of(argumentSet("doesNotApplyDefaultsWhenInheritDefaultsNotSpecified", null, false),
+					argumentSet("doesNotApplyDefaultsWhenInheritDefaultsFalse", Boolean.FALSE, false),
+					argumentSet("doesApplyDefaultsWhenInheritDefaultsTrue", Boolean.TRUE, true));
 		}
 
 	}
@@ -304,171 +427,9 @@ class GrpcClientPropertiesTests {
 			var properties = new GrpcClientProperties();
 			var defaultChannel = properties.getDefaultChannel();
 			var newChannel = defaultChannel.copy();
+			assertThat(newChannel).isNotSameAs(defaultChannel);
 			assertThat(newChannel).usingRecursiveComparison().isEqualTo(defaultChannel);
 			assertThat(newChannel.getServiceConfig()).isEqualTo(defaultChannel.getServiceConfig());
-		}
-
-	}
-
-	@Nested
-	class ChannelInheritanceAPI {
-
-		@Test
-		void namedChannelInheritsFromChannelDefaultsWhenOptedIn() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.max-inbound-message-size", "5MB");
-			map.put("spring.grpc.client.channel.defaults.max-inbound-metadata-size", "1MB");
-			map.put("spring.grpc.client.channel.defaults.enable-keep-alive", "true");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			map.put("spring.grpc.client.channels.service-a.inherit-defaults", "true");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var channel = properties.getChannel("service-a");
-
-			assertThat(channel.getMaxInboundMessageSize()).isEqualTo(DataSize.ofMegabytes(5));
-			assertThat(channel.getMaxInboundMetadataSize()).isEqualTo(DataSize.ofMegabytes(1));
-			assertThat(channel.isEnableKeepAlive()).isTrue();
-			assertThat(channel.getAddress()).isEqualTo("static://service-a:9090");
-		}
-
-		@Test
-		void namedChannelOverridesChannelDefaultsSettings() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.max-inbound-message-size", "5MB");
-			map.put("spring.grpc.client.channel.defaults.enable-keep-alive", "true");
-			map.put("spring.grpc.client.channel.defaults.idle-timeout", "30s");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			map.put("spring.grpc.client.channels.service-a.inherit-defaults", "true");
-			map.put("spring.grpc.client.channels.service-a.max-inbound-message-size", "10MB");
-			map.put("spring.grpc.client.channels.service-a.enable-keep-alive", "false");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var channel = properties.getChannel("service-a");
-
-			assertThat(channel.getMaxInboundMessageSize()).isEqualTo(DataSize.ofMegabytes(10));
-			assertThat(channel.isEnableKeepAlive()).isFalse();
-			assertThat(channel.getIdleTimeout()).isEqualTo(Duration.ofSeconds(30));
-		}
-
-		@Test
-		void namedChannelMergesNestedHealthConfig() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.health.enabled", "true");
-			map.put("spring.grpc.client.channel.defaults.health.service-name", "default-service");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			map.put("spring.grpc.client.channels.service-a.inherit-defaults", "true");
-			map.put("spring.grpc.client.channels.service-a.health.service-name", "service-a-health");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var channel = properties.getChannel("service-a");
-
-			assertThat(channel.getHealth().isEnabled()).isTrue();
-			assertThat(channel.getHealth().getServiceName()).isEqualTo("service-a-health");
-		}
-
-		@Test
-		void namedChannelMergesNestedSslConfig() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.ssl.enabled", "true");
-			map.put("spring.grpc.client.channel.defaults.ssl.bundle", "default-bundle");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			map.put("spring.grpc.client.channels.service-a.inherit-defaults", "true");
-			map.put("spring.grpc.client.channels.service-a.ssl.bundle", "service-a-bundle");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var channel = properties.getChannel("service-a");
-
-			assertThat(channel.getSsl().isEnabled()).isTrue();
-			assertThat(channel.getSsl().getBundle()).isEqualTo("service-a-bundle");
-		}
-
-		@Test
-		void namedChannelMergesServiceConfig() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.service-config.default-key", "default-value");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			map.put("spring.grpc.client.channels.service-a.inherit-defaults", "true");
-			map.put("spring.grpc.client.channels.service-a.service-config.custom-key", "custom-value");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var channel = properties.getChannel("service-a");
-
-			assertThat(channel.getServiceConfig()).containsKey("default-key");
-			assertThat(channel.getServiceConfig()).containsKey("custom-key");
-		}
-
-		@Test
-		void multipleNamedChannelsAllInheritFromDefaults() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.max-inbound-message-size", "5MB");
-			map.put("spring.grpc.client.channel.defaults.enable-keep-alive", "true");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			map.put("spring.grpc.client.channels.service-a.inherit-defaults", "true");
-			map.put("spring.grpc.client.channels.service-b.address", "static://service-b:9090");
-			map.put("spring.grpc.client.channels.service-b.inherit-defaults", "true");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var channelA = properties.getChannel("service-a");
-			var channelB = properties.getChannel("service-b");
-
-			assertThat(channelA.getMaxInboundMessageSize()).isEqualTo(DataSize.ofMegabytes(5));
-			assertThat(channelA.isEnableKeepAlive()).isTrue();
-			assertThat(channelA.getAddress()).isEqualTo("static://service-a:9090");
-
-			assertThat(channelB.getMaxInboundMessageSize()).isEqualTo(DataSize.ofMegabytes(5));
-			assertThat(channelB.isEnableKeepAlive()).isTrue();
-			assertThat(channelB.getAddress()).isEqualTo("static://service-b:9090");
-		}
-
-		@Test
-		void namedChannelDoesNotInheritByDefault() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.max-inbound-message-size", "5MB");
-			map.put("spring.grpc.client.channel.defaults.enable-keep-alive", "true");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var channel = properties.getChannel("service-a");
-
-			// Should NOT inherit from defaults by default - uses property defaults
-			// instead
-			assertThat(channel.getMaxInboundMessageSize()).isEqualTo(DataSize.ofBytes(4194304));
-			assertThat(channel.isEnableKeepAlive()).isFalse();
-			assertThat(channel.getAddress()).isEqualTo("static://service-a:9090");
-		}
-
-		@Test
-		void defaultChannelDoesNotInheritFromChannelDefaults() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.max-inbound-message-size", "5MB");
-			map.put("spring.grpc.client.channel.defaults.enable-keep-alive", "true");
-			map.put("spring.grpc.client.default-channel.address", "static://default-server:9090");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var defaultChannel = properties.getDefaultChannel();
-
-			// default-channel should NOT inherit from channel.defaults
-			assertThat(defaultChannel.getMaxInboundMessageSize()).isEqualTo(DataSize.ofBytes(4194304));
-			assertThat(defaultChannel.isEnableKeepAlive()).isFalse();
-			assertThat(defaultChannel.getAddress()).isEqualTo("static://default-server:9090");
-		}
-
-		@Test
-		void channelDefaultsAreIndependentFromDefaultChannel() {
-			Map<String, String> map = new HashMap<>();
-			map.put("spring.grpc.client.channel.defaults.max-inbound-message-size", "5MB");
-			map.put("spring.grpc.client.default-channel.max-inbound-message-size", "10MB");
-			map.put("spring.grpc.client.channels.service-a.address", "static://service-a:9090");
-			map.put("spring.grpc.client.channels.service-a.inherit-defaults", "true");
-			GrpcClientProperties properties = bindProperties(map);
-
-			var defaultChannel = properties.getDefaultChannel();
-			var namedChannel = properties.getChannel("service-a");
-
-			// default-channel has its own setting
-			assertThat(defaultChannel.getMaxInboundMessageSize()).isEqualTo(DataSize.ofMegabytes(10));
-			// named channel inherits from channel.defaults, not default-channel
-			assertThat(namedChannel.getMaxInboundMessageSize()).isEqualTo(DataSize.ofMegabytes(5));
 		}
 
 	}
