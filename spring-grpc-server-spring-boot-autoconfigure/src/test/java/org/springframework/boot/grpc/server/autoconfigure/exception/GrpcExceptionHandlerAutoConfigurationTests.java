@@ -17,6 +17,7 @@
 package org.springframework.boot.grpc.server.autoconfigure.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,11 @@ import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.grpc.server.GrpcServerFactory;
+import org.springframework.grpc.server.exception.CompositeGrpcExceptionHandler;
 import org.springframework.grpc.server.exception.GrpcExceptionHandler;
 import org.springframework.grpc.server.exception.GrpcExceptionHandlerInterceptor;
 import org.springframework.grpc.server.lifecycle.GrpcServerLifecycle;
@@ -121,9 +126,43 @@ class GrpcExceptionHandlerAutoConfigurationTests {
 	void exceptionHandlerInterceptorAutoConfiguredAsExpected() {
 		this.contextRunner()
 			.run((context) -> assertThat(context).getBean(GrpcExceptionHandlerInterceptor.class)
-				.extracting("exceptionHandler.exceptionHandlers",
-						InstanceOfAssertFactories.array(GrpcExceptionHandler[].class))
+				.extracting("exceptionHandler")
+				.isInstanceOf(CompositeGrpcExceptionHandler.class)
+				.extracting("exceptionHandlers")
+				.asInstanceOf(InstanceOfAssertFactories.array(GrpcExceptionHandler[].class))
 				.containsExactly(context.getBean(GrpcExceptionHandler.class)));
+	}
+
+	@Test
+	void userDefinedExceptionHandlersCanBeOrdered() {
+		this.contextRunner()
+			.withUserConfiguration(UserExceptionHandlerConfig.class)
+			.run((context) -> assertThat(context).getBean(GrpcExceptionHandlerInterceptor.class)
+				.extracting("exceptionHandler.exceptionHandlers")
+				.asInstanceOf(InstanceOfAssertFactories.array(GrpcExceptionHandler[].class))
+				.startsWith(UserExceptionHandlerConfig.USER_EXCEPTION_HANDLER_BAR,
+						UserExceptionHandlerConfig.USER_EXCEPTION_HANDLER_FOO));
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class UserExceptionHandlerConfig {
+
+		static GrpcExceptionHandler USER_EXCEPTION_HANDLER_FOO = mock();
+
+		static GrpcExceptionHandler USER_EXCEPTION_HANDLER_BAR = mock();
+
+		@Bean
+		@Order(200)
+		GrpcExceptionHandler userExceptionHandlerFoo() {
+			return USER_EXCEPTION_HANDLER_FOO;
+		}
+
+		@Bean
+		@Order(100)
+		GrpcExceptionHandler userExceptionHandlerBar() {
+			return USER_EXCEPTION_HANDLER_BAR;
+		}
+
 	}
 
 }

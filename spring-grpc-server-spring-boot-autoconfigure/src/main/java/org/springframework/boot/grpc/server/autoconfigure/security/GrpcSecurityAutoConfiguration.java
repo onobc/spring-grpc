@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.Order;
 import org.springframework.grpc.server.GlobalServerInterceptor;
 import org.springframework.grpc.server.exception.GrpcExceptionHandler;
 import org.springframework.grpc.server.security.CoroutineSecurityContextInterceptor;
@@ -55,6 +56,7 @@ import io.grpc.internal.GrpcUtil;
  * @author Dave Syer
  * @author Chris Bono
  * @author Andrey Litvitski
+ * @author Thomas Skjolberg
  * @since 1.0.0
  */
 @AutoConfiguration(before = GrpcExceptionHandlerAutoConfiguration.class,
@@ -71,8 +73,9 @@ public final class GrpcSecurityAutoConfiguration {
 	static class ExceptionHandlerConfiguration {
 
 		@Bean
+		@Order(0)
 		GrpcExceptionHandler accessExceptionHandler() {
-			return new SecurityGrpcExceptionHandler(0);
+			return new SecurityGrpcExceptionHandler();
 		}
 
 	}

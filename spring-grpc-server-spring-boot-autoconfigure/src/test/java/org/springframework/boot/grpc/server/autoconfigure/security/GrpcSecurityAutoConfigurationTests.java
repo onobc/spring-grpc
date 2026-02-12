@@ -17,6 +17,7 @@
 package org.springframework.boot.grpc.server.autoconfigure.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,7 +28,9 @@ import org.springframework.boot.grpc.server.autoconfigure.GrpcServerAutoConfigur
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.grpc.server.GrpcServerFactory;
 import org.springframework.grpc.server.exception.GrpcExceptionHandler;
 import org.springframework.grpc.server.lifecycle.GrpcServerLifecycle;
@@ -110,9 +113,41 @@ class GrpcSecurityAutoConfigurationTests {
 		});
 	}
 
+	@Test
+	void userDefinedExceptionHandlerCanBeOrderedAroundSecurityExceptionHandler() {
+		this.contextRunner().withUserConfiguration(UserExceptionHandlerConfig.class).run((context) -> {
+			GrpcExceptionHandler securityExceptionHandler = context.getBean("accessExceptionHandler",
+					SecurityGrpcExceptionHandler.class);
+			assertThat(context.getBeanProvider(GrpcExceptionHandler.class).orderedStream()).containsExactly(
+					UserExceptionHandlerConfig.USER_HANDLER_PRE_SECURITY_HANDLER, securityExceptionHandler,
+					UserExceptionHandlerConfig.USER_HANDLER_POST_SECURITY_HANDLER);
+		});
+	}
+
 	@EnableMethodSecurity
 	@Configuration(proxyBeanMethods = false)
 	static class ExtraConfiguration {
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class UserExceptionHandlerConfig {
+
+		static GrpcExceptionHandler USER_HANDLER_PRE_SECURITY_HANDLER = mock();
+
+		static GrpcExceptionHandler USER_HANDLER_POST_SECURITY_HANDLER = mock();
+
+		@Bean
+		@Order(-10)
+		GrpcExceptionHandler userHandlerPreSecurityHandler() {
+			return USER_HANDLER_PRE_SECURITY_HANDLER;
+		}
+
+		@Bean
+		@Order(10)
+		GrpcExceptionHandler userHandlerPostSecurityHandler() {
+			return USER_HANDLER_POST_SECURITY_HANDLER;
+		}
 
 	}
 
